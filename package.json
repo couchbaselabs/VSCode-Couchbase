@@ -194,11 +194,11 @@
   },
   "scripts": {
     "build": "webpack",
+    "build-native": "node scripts/rebuildElectron.js",
     "format": "prettier 'src/**/*.ts' --write",
     "lint": "eslint src --ext ts --fix",
     "package": "vsce package",
     "pretest": "npm run test-compile && npm run lint",
-    "rebuild:electron": "node scripts/rebuildElectron.js",
     "test": "node ./out/test/runTest.js",
     "vscode:prepublish": "webpack --devtool source-map",
     "watch": "webpack --watch"

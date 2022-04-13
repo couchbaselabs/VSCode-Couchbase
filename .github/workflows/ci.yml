@@ -1,0 +1,88 @@
+name: Package VSCode Plugin
+
+on: [push]
+
+jobs:
+  prepare:
+    name: Build Native Dependencies
+    strategy:
+      fail-fast: false
+      matrix:
+        kind: ['linux', 'macos', 'windows']
+        include:
+          - kind: linux
+            os: ubuntu-latest
+            folder_name: Linux 
+          - kind: macos
+            os: macOS-latest
+            folder_name: Darwin
+          - kind: windows
+            os: windows-latest
+            folder_name: Windows
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v2
+      with:
+        node-version: '14.16'
+        cache: 'npm'
+
+    - name: Compile native bindings
+      run: |
+        npm install
+        npm run build-native
+
+    - name: Save Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ matrix.folder_name }}
+        path: ${{ github.workspace }}/build/couchbase_impl.node
+        retention-days: 1
+
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    needs: prepare
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v2
+      with:
+        node-version: '14.16'
+        cache: 'npm'
+
+    - name: Retrieve Linux Artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: Linux
+        path: ${{ github.workspace }}/compiled/14.16.0/linux/x64
+
+    - name: Retrieve MacOS Artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: Darwin
+        path: ${{ github.workspace }}/compiled/14.16.0/darwin/x64
+
+    - name: Retrieve Windows Artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: Windows
+        path: ${{ github.workspace }}/compiled/14.16.0/windows/x64
+
+    - name: Package
+      run: |
+        npm install
+        npm run package
+
+    - name: Save Package
+      uses: actions/upload-artifact@v2
+      with:
+        name: vsix
+        path: ${{ github.workspace }}/vscode-couchbase-*.vsix
+        retention-days: 1
+
+    # - name: Publish
+    #   uses: softprops/action-gh-release@v1
+    #   with:
+    #     files: "vscode-cblite*"
