@@ -86,6 +86,7 @@ import { validateDocument } from "./commands/fts/SearchWorkbench/validators/vali
 import { AutocompleteVisitor } from "./commands/fts/SearchWorkbench/contributor/autoCompleteVisitor";
 import { CbsJsonHoverProvider } from "./commands/fts/SearchWorkbench/documentation/documentationProvider";
 import { deleteIndex } from "./util/ftsIndexUtils";
+import { JsonAttributeCompletionProvider } from "./commands/documents/contributor/autoCompleteContributor";
 
 export function activate(context: vscode.ExtensionContext) {
   Global.setState(context.globalState);
@@ -148,6 +149,32 @@ const provider = vscode.languages.registerCompletionItemProvider(
 
 
 context.subscriptions.push(provider);
+
+const autoCompleteProviderForDocuments = vscode.languages.registerCompletionItemProvider(
+  { language: 'json' },
+  {
+      async provideCompletionItems(document, position, token, context) {
+          const autoComplete = new JsonAttributeCompletionProvider(document,cacheService);
+          const suggestions = await autoComplete.provideCompletionItems(document,position);
+          if (suggestions?.length === 0) {
+            return [new vscode.CompletionItem('', vscode.CompletionItemKind.Text)].map(item => {
+                item.sortText = '\u0000';
+                item.preselect = true;
+                item.keepWhitespace = true;
+                item.insertText = '';
+                item.range = new vscode.Range(position, position);
+                return item;
+            });
+        }
+          return suggestions;
+      }
+  },
+  '\"' 
+);
+
+
+
+context.subscriptions.push(autoCompleteProviderForDocuments);
 
 const disposable = vscode.window.onDidChangeTextEditorSelection(async (e) => {
   if (e.kind === vscode.TextEditorSelectionChangeKind.Command) {

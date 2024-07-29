@@ -468,7 +468,7 @@
       },
       {
         "command": "vscode-couchbase.openQueryWorkbench",
-        "title": "New Workbench",
+        "title": "New Query Workbench",
         "category": "Couchbase",
         "icon": "images/create.svg"
       },
