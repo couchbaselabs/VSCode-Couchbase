@@ -31,8 +31,13 @@ export function getProjectsNamedParameters(): IKeyValuePair[] {
             const lines = fileContent.split('\n');
 
             for (let line of lines) {
+                if (line.trim().length === 0) continue; 
                 const [key, value] = line.split('=');
-                namedParameters.push({ key: key.trim(), value: value.trim() });
+                try {
+                    namedParameters.push({ key: key.trim(), value: JSON.parse(value.trim()) });
+                } catch (e) {
+                    namedParameters.push({ key: key.trim(), value: value.trim() });
+                }
             }
         } catch (error: any) {
             if (error.code === 'ENOENT') {
